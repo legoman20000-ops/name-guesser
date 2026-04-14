@@ -1,71 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Name Guesser</title>
-<style>
-body {
-  font-family: Arial;
-  background: black;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-.card {
-  text-align: center;
-}
-input, button {
-  margin-top: 10px;
-  padding: 10px;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #020617, #0f172a, #000);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      text-align: center;
+      background: rgba(255,255,255,0.06);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      width: min(90vw, 520px);
+    }
+    h1 {
+      font-size: 2.4rem;
+      margin-bottom: 10px;
+    }
+    p {
+      color: rgba(255,255,255,0.7);
+    }
+    input, button {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1rem;
+    }
+    input {
+      width: 100%;
+      max-width: 280px;
+    }
+    button {
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+    }
+  </style>
 </head>
 <body>
+  <div class="card">
+    <h1 id="title">Loading...</h1>
+    <p id="subtitle"></p>
 
-<div class="card">
-  <h1 id="title">Loading...</h1>
+    <div id="askBox" style="display:none;">
+      <div class="row">
+        <input id="nameInput" placeholder="Enter your first name" maxlength="40" />
+        <button onclick="saveName()">Continue</button>
+      </div>
+    </div>
 
-  <div id="askBox" style="display:none;">
-    <input id="nameInput" placeholder="Enter your name">
-    <br>
-    <button onclick="saveName()">Continue</button>
+    <div class="row">
+      <button onclick="resetName()">Forget Saved Name</button>
+    </div>
   </div>
 
-  <button onclick="reset()" style="margin-top:20px;">Reset</button>
-</div>
+  <script>
+    const STORAGE_KEY = "welcome_name";
 
-<script>
-const key = "realName";
+    function formatName(name) {
+      name = String(name || "").trim();
+      if (!name) return "";
+      return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    }
 
-function load() {
-  let name = localStorage.getItem(key);
+    function getNameFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return formatName(params.get("name"));
+    }
 
-  if (!name) {
-    document.getElementById("title").innerText = "What is your name?";
-    document.getElementById("askBox").style.display = "block";
-  } else {
-    document.getElementById("title").innerText = "Welcome, " + name;
-  }
-}
+    function getSavedName() {
+      return formatName(localStorage.getItem(STORAGE_KEY));
+    }
 
-function saveName() {
-  let name = document.getElementById("nameInput").value.trim();
-  if (!name) return;
+    function setSavedName(name) {
+      localStorage.setItem(STORAGE_KEY, formatName(name));
+    }
 
-  name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-  localStorage.setItem(key, name);
+    function showWelcome(name, source) {
+      document.getElementById("askBox").style.display = "none";
+      document.getElementById("title").innerText = "Welcome, " + name;
 
-  load();
-}
+      if (source === "url") {
+        document.getElementById("subtitle").innerText = "Loaded from your custom link.";
+      } else if (source === "saved") {
+        document.getElementById("subtitle").innerText = "Loaded from this browser's saved name.";
+      } else {
+        document.getElementById("subtitle").innerText = "Saved successfully.";
+      }
+    }
 
-function reset() {
-  localStorage.removeItem(key);
-  location.reload();
-}
+    function askName() {
+      document.getElementById("title").innerText = "What is your name?";
+      document.getElementById("subtitle").innerText = "Enter it once and this browser will remember you.";
+      document.getElementById("askBox").style.display = "block";
+    }
 
-load();
-</script>
+    function saveName() {
+      const input = document.getElementById("nameInput").value;
+      const name = formatName(input);
+      if (!name) return;
 
+      setSavedName(name);
+      showWelcome(name, "manual");
+    }
+
+    function resetName() {
+      localStorage.removeItem(STORAGE_KEY);
+      location.href = location.pathname;
+    }
+
+    function loadPage() {
+      const urlName = getNameFromUrl();
+      if (urlName) {
+        setSavedName(urlName);
+        showWelcome(urlName, "url");
+        return;
+      }
+
+      const savedName = getSavedName();
+      if (savedName) {
+        showWelcome(savedName, "saved");
+        return;
+      }
+
+      askName();
+    }
+
+    loadPage();
+  </script>
 </body>
 </html>
