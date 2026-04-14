@@ -1,140 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Name Guesser</title>
-
+<title>Name Guesser</title>
 <style>
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #020617, #0f172a, #000);
+  font-family: Arial;
+  background: black;
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
-
 .card {
   text-align: center;
-  background: rgba(255,255,255,0.06);
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
-
-h1 {
-  font-size: 2.5rem;
-}
-
-button {
-  margin-top: 15px;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  background: white;
-  color: black;
-  font-weight: bold;
-}
-
-input {
+input, button {
   margin-top: 10px;
   padding: 10px;
-  border-radius: 10px;
-  border: none;
-  width: 200px;
 }
 </style>
 </head>
-
 <body>
 
 <div class="card">
-  <h2>Smart Name Guesser</h2>
-  <h1 id="welcome">Welcome, ...</h1>
-  <p id="confidence"></p>
+  <h1 id="title">Loading...</h1>
 
-  <button onclick="guess()">Guess Again</button>
+  <div id="askBox" style="display:none;">
+    <input id="nameInput" placeholder="Enter your name">
+    <br>
+    <button onclick="saveName()">Continue</button>
+  </div>
 
-  <br>
-
-  <input id="realName" placeholder="Enter your real name">
-  <button onclick="learn()">Teach It</button>
-  <button onclick="clearName()">Forget</button>
+  <button onclick="reset()" style="margin-top:20px;">Reset</button>
 </div>
 
 <script>
-const STORAGE_KEY = "smart_name_profile";
+const key = "realName";
 
-const namePools = {
-  us: ["James","Michael","David","John","Chris","Daniel","Matthew","Joseph","Anthony","Robert","Emma","Olivia","Sophia","Ava"],
-  es: ["Sofia","Mateo","Isabella","Santiago","Valentina","Diego","Camila"],
-  jp: ["Yuki","Haru","Ren","Aoi","Sora","Hinata"],
-  kr: ["Minjun","Jiwoo","Jisoo","Yuna","Haneul"],
-  generic: ["Alex","Jordan","Taylor","Chris","Sam","Morgan","Riley","Avery"]
-};
+function load() {
+  let name = localStorage.getItem(key);
 
-function getLocale() {
-  const lang = (navigator.language || "en").toLowerCase();
-  if (lang.startsWith("es")) return "es";
-  if (lang.startsWith("ja")) return "jp";
-  if (lang.startsWith("ko")) return "kr";
-  if (lang.startsWith("en")) return "us";
-  return "generic";
-}
-
-function getSavedName() {
-  return localStorage.getItem(STORAGE_KEY);
-}
-
-function saveName(name) {
-  localStorage.setItem(STORAGE_KEY, name);
-}
-
-function clearName() {
-  localStorage.removeItem(STORAGE_KEY);
-  guess();
-}
-
-function smartGuess() {
-  const pool = namePools[getLocale()] || namePools.generic;
-
-  // weighted pick (better accuracy feel)
-  const index = Math.floor(Math.random() * Math.min(5, pool.length));
-  return pool[index];
-}
-
-function guess() {
-  const saved = getSavedName();
-
-  if (saved) {
-    document.getElementById("welcome").innerText = "Welcome, " + saved;
-    document.getElementById("confidence").innerText = "Accuracy: 99% (learned)";
-    return;
+  if (!name) {
+    document.getElementById("title").innerText = "What is your name?";
+    document.getElementById("askBox").style.display = "block";
+  } else {
+    document.getElementById("title").innerText = "Welcome, " + name;
   }
-
-  const name = smartGuess();
-
-  const confidence = Math.floor(Math.random() * 25) + 70;
-
-  document.getElementById("welcome").innerText = "Welcome, " + name;
-  document.getElementById("confidence").innerText = "Accuracy: " + confidence + "%";
 }
 
-function learn() {
-  const input = document.getElementById("realName").value.trim();
-  if (!input) return;
+function saveName() {
+  let name = document.getElementById("nameInput").value.trim();
+  if (!name) return;
 
-  const formatted = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
-  saveName(formatted);
+  name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  localStorage.setItem(key, name);
 
-  guess();
+  load();
 }
 
-guess();
+function reset() {
+  localStorage.removeItem(key);
+  location.reload();
+}
+
+load();
 </script>
 
 </body>
